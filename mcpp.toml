@@ -1,0 +1,40 @@
+# One of the allocator implementations the freestanding subset can bind.
+#
+# The capability is what makes the choice the program's. `std-freestanding`
+# declares a feature that REQUIRES `freestanding-allocator`; this package and
+# any other PROVIDE it; the resolver binds exactly one and reports two. That
+# last property is the reason for the indirection: `operator new` is a
+# whole-program singleton, and two implementations reaching the link produce a
+# duplicate definition naming a mangled symbol, whereas two providers reaching
+# the resolver produce a message naming both packages.
+[package]
+namespace   = "mcpplibs"
+name        = "std-freestanding-alloc-kal"
+version     = "0.1.0"
+description = "The replaceable allocation functions for the freestanding subset, forwarded to openkal"
+license     = "Apache-2.0"
+authors     = ["mcpplibs"]
+repo        = "https://github.com/mcpplibs/std-freestanding-alloc-kal"
+provides    = ["freestanding-allocator"]
+
+# The contract, not an implementation of it. Declaring it turns a version
+# mismatch into a resolution-time message instead of a link-time one, and
+# records what this package's twelve definitions are written against.
+#
+# ⚠️ An openkal IMPLEMENTATION is not declared here and must not be. Which
+# implementation is present is a property of the target — on bare metal the
+# board package supplies it, because the console address it writes to is a
+# board fact. A dependency here would bind every consumer to one board.
+[dependencies]
+openkal = "0.5.1"
+
+[build]
+# The same reasoning openkal's own implementations record. No exception may
+# propagate out of a replacement allocation function, and on a freestanding
+# target there is no unwinder to carry one; neither facility is used, so
+# neither is emitted. Attached to this package's sources rather than to the
+# build, because the dialect a translation unit is compiled under is recorded
+# in what it produces.
+flags = [
+  { glob = "src/**", cxxflags = ["-fno-exceptions", "-fno-rtti"] },
+]
