@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: twelve overloads compile for the target
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      MCPP_VERSION: 2026.8.20.2
+      XLINGS_VERSION: v2026.8.17.2
+      XLINGS_NON_INTERACTIVE: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install xlings
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/openxlings/xlings/main/tools/other/quick_install.sh \
+            | bash -s "$XLINGS_VERSION"
+          echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
+
+      - name: Install mcpp
+        run: |
+          xlings update
+          xlings install "mcpp@$MCPP_VERSION" -y -g
+          mcpp --version
+          mcpp self config --mirror GLOBAL
+
+      - name: The package builds for a freestanding target
+        run: mcpp build --target riscv64-none-elf
+
+      # ⚠️ The load-bearing check, and not "it compiled". These are REPLACEABLE
+      # functions: a definition that is present but not exported under the name
+      # the compiler emits would compile, link into nothing, and leave every
+      # consumer failing on `undefined symbol: operator new` exactly as before.
+      - name: All twelve replaceable functions are actually exported
+        run: |
+          set -euo pipefail
+          NM=$(ls -d "$HOME"/.mcpp/registry/data/xpkgs/xim-x-llvm/*/bin/llvm-nm | head -1)
+          OBJ=$(find target -name "alloc*.o" | head -1)
+          test -n "$OBJ" || { echo "no object produced"; exit 1; }
+          n=$("$NM" --defined-only "$OBJ" | grep -cE " T _Zn(a|w)|_ZdlPv|_ZdaPv")
+          echo "exported new/delete symbols: $n"
+          test "$n" -ge 12 || { "$NM" --defined-only "$OBJ"; echo "expected at least 12"; exit 1; }
