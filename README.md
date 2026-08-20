@@ -5,10 +5,15 @@ forwarded to [openkal][kal].
 
 ```toml
 [dependencies]
-std-freestanding = { version = "0.3.0", features = ["alloc-kal"] }
+std-freestanding = { version = "0.3.1", features = ["alloc-kal"] }
 ```
 
-That is the whole of the consumer's side. The feature both states the
+That is the whole of the consumer's side.
+
+⚠️ **0.3.1 and not 0.3.0.** The `[feature-deps]` entry in 0.3.0 named a version
+selector the resolver does not have, so the feature activated and its
+implementation could not be fetched. A feature whose implementation cannot be
+fetched is a feature that does not exist. The feature both states the
 requirement and brings this package, so the package name never has to be
 written down.
 
