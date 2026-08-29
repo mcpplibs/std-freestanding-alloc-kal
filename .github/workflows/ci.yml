@@ -75,6 +75,60 @@ jobs:
           echo "exported new/delete symbols: $n"
           test "$n" -ge 12 || { "$NM" --defined-only "$OBJ"; echo "expected at least 12"; exit 1; }
 
+      # ⚠️⚠️ THE TWO DECLARATIONS THIS PACKAGE CARRIES MUST STILL BE openkal's,
+      # AND UNTIL NOW NOTHING SAID SO.
+      #
+      # `src/alloc.cpp` declares `kal_alloc` and `kal_free` itself rather than
+      # including <openkal/memory.h>, so that the package needs no header search
+      # path of its own -- and its manifest names openkal so that a mismatch is
+      # reported when the graph resolves. But a VERSION dependency catches a
+      # version mismatch; it does not catch a DECLARATION mismatch. If openkal
+      # changed either signature, this package would compile, link, and produce
+      # a silently wrong calling convention at the only place it matters.
+      #
+      # ⭐ SO THE TWO ARE COMPILED TOGETHER, once, in a translation unit that
+      # ships nowhere: openkal's header and this package's own declarations in
+      # the same scope. Disagreeing declarations of the same `extern "C"` name
+      # are a compile error that names them, which is the diagnostic wanted.
+      - name: The declarations it carries are still the specification's
+        run: |
+          set -euo pipefail
+          CXX=$(ls -d "$HOME"/.mcpp/registry/data/xpkgs/xim-x-llvm/*/bin/clang++ | head -1)
+
+          # ⚠️⚠️ THE VERSION IS NAMED, AND `head -1' OVER THE STORE IS NOT AN
+          # ANSWER TO THIS QUESTION. The package store accumulates every openkal
+          # a build on this machine ever needed; the first spelling of this step
+          # globbed it and got 0.5.2 -- four minors behind the pin -- and
+          # reported that the declarations agree. They did, with a specification
+          # this package does not depend upon.
+          #
+          # The version comes from this package's own manifest, so the two
+          # cannot drift, and exactly one directory must match.
+          V=$(sed -n 's/^openkal = "\([^"]*\)".*/\1/p' mcpp.toml | head -1)
+          test -n "$V" || { echo "::error::mcpp.toml names no openkal version"; exit 1; }
+          mapfile -t INCS < <(find "$HOME/.mcpp/registry" -type d \
+                -path "*openkal-$V/include" -exec test -f '{}/openkal/memory.h' ';' -print)
+          test "${#INCS[@]}" -eq 1 || {
+            echo "::error::expected exactly one openkal-$V include directory, found ${#INCS[@]}"
+            printf '        %s\n' "${INCS[@]}"; exit 1; }
+          INC="${INCS[0]}"
+          echo "  openkal $V headers: $INC"
+          # The declarations are taken FROM the source rather than written out
+          # again here, so that this cannot drift from what actually ships.
+          sed -n '/^void\* kal_alloc/p;/^void  kal_free/p' src/alloc.cpp > decls.txt
+          test -s decls.txt || { echo "::error::the declarations were not found in src/alloc.cpp"; exit 1; }
+          cat decls.txt
+          {
+            echo '#include <openkal/memory.h>'
+            echo 'using size_type = __SIZE_TYPE__;'
+            echo 'extern "C" {'
+            cat decls.txt
+            echo '}'
+          } > agree.cpp
+          "$CXX" -std=c++23 -fsyntax-only -ffreestanding -I"$INC" agree.cpp
+          rm -f agree.cpp decls.txt
+          echo "  ok  both declarations agree with the specification's"
+
   # ---------------------------------------------------------------------------
   # The cross-compilation is performed FROM three systems, not only from Linux.
   #

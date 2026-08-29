@@ -46,8 +46,17 @@ naming a mangled operator, which is the same defect with a worse message.
 
 ## What an openkal implementation must supply
 
-`kal_alloc(size, align)` and `kal_free(p, size, align)`. On bare metal the
-board package supplies them — the console and the heap region are board facts.
+`kal_alloc(size, align)` and `kal_free(p, size, align)`, as
+[openkal][kal] 0.9.0 declares them. On bare metal the board package supplies
+them — the console and the heap region are board facts.
+
+⭐ Those two are all this package reaches for, which is why it follows openkal's
+minor versions without changing: 0.9.0 withdrew `kal_io_result`, made the
+capability words operations and added `kal_memory_granularity`, and none of that
+is on the allocation path. The dependency is declared so that a mismatch is
+reported when the graph resolves, and continuous integration compiles the two
+declarations this package carries against the header they came from, because a
+version dependency catches a version mismatch and not a signature one.
 
 ⚠️ The unsized `operator delete` overloads have no size to pass and give zero,
 which openkal defines as "not stated". An implementation that needs the size in
