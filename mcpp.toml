@@ -10,7 +10,7 @@
 [package]
 namespace   = "mcpplibs"
 name        = "std-freestanding-alloc-kal"
-version     = "0.1.2"
+version     = "0.1.3"
 description = "The replaceable allocation functions for the freestanding subset, forwarded to openkal"
 license     = "Apache-2.0"
 authors     = ["mcpplibs"]
@@ -26,7 +26,7 @@ provides    = ["freestanding-allocator"]
 # board package supplies it, because the console address it writes to is a
 # board fact. A dependency here would bind every consumer to one board.
 [dependencies]
-openkal = "0.9.0"
+openkal = "0.10.0"
 
 [build]
 # The same reasoning openkal's own implementations record. No exception may
