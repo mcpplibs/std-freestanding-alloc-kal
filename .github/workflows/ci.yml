@@ -26,7 +26,7 @@ jobs:
 
       - name: Install mcpp
         run: |
-          # ⚠️ A LOOP, BECAUSE ONE `xlings update` CAN RETURN A STALE INDEX
+          # A LOOP, BECAUSE ONE `xlings update` CAN RETURN A STALE INDEX
           # WITHOUT SAYING SO.
           #
           # The index is published as an artifact behind a pointer, and that
@@ -61,7 +61,7 @@ jobs:
       - name: The package builds for a freestanding target
         run: mcpp build --target riscv64-none-elf
 
-      # ⚠️ The load-bearing check, and not "it compiled". These are REPLACEABLE
+      # The load-bearing check, and not "it compiled". These are REPLACEABLE
       # functions: a definition that is present but not exported under the name
       # the compiler emits would compile, link into nothing, and leave every
       # consumer failing on `undefined symbol: operator new` exactly as before.
@@ -75,7 +75,7 @@ jobs:
           echo "exported new/delete symbols: $n"
           test "$n" -ge 12 || { "$NM" --defined-only "$OBJ"; echo "expected at least 12"; exit 1; }
 
-      # ⚠️⚠️ THE TWO DECLARATIONS THIS PACKAGE CARRIES MUST STILL BE openkal's,
+      # THE TWO DECLARATIONS THIS PACKAGE CARRIES MUST STILL BE openkal's,
       # AND UNTIL NOW NOTHING SAID SO.
       #
       # `src/alloc.cpp` declares `kal_alloc` and `kal_free` itself rather than
@@ -86,7 +86,7 @@ jobs:
       # changed either signature, this package would compile, link, and produce
       # a silently wrong calling convention at the only place it matters.
       #
-      # ⭐ SO THE TWO ARE COMPILED TOGETHER, once, in a translation unit that
+      # SO THE TWO ARE COMPILED TOGETHER, once, in a translation unit that
       # ships nowhere: openkal's header and this package's own declarations in
       # the same scope. Disagreeing declarations of the same `extern "C"` name
       # are a compile error that names them, which is the diagnostic wanted.
@@ -95,7 +95,7 @@ jobs:
           set -euo pipefail
           CXX=$(ls -d "$HOME"/.mcpp/registry/data/xpkgs/xim-x-llvm/*/bin/clang++ | head -1)
 
-          # ⚠️⚠️ THE VERSION IS NAMED, AND `head -1' OVER THE STORE IS NOT AN
+          # THE VERSION IS NAMED, AND `head -1' OVER THE STORE IS NOT AN
           # ANSWER TO THIS QUESTION. The package store accumulates every openkal
           # a build on this machine ever needed; the first spelling of this step
           # globbed it and got 0.5.2 -- four minors behind the pin -- and
@@ -138,7 +138,7 @@ jobs:
   # A package that has only ever been built from Linux is a package whose
   # consumers must use Linux, and nothing in these sources says so.
   #
-  # ⚠️ A TOOLCHAIN AXIS IS ABSENT HERE, AND THAT IS MEASURED RATHER THAN
+  # A TOOLCHAIN AXIS IS ABSENT HERE, AND THAT IS MEASURED RATHER THAN
   # ASSUMED. The row for a bare-metal triple names its compiler, and the
   # command-line override does not displace it: `--toolchain gcc@16.1.0` on a
   # `riscv64-none-elf` build resolves llvm@22.1.8 regardless. A matrix over
@@ -147,7 +147,7 @@ jobs:
   # choice is real — openkal, whose declarations are compiled by three families
   # on three systems.
   #
-  # ⚠️ BUILD ONLY, AND DELIBERATELY. Behaviour is asserted once, above, under an
+  # BUILD ONLY, AND DELIBERATELY. Behaviour is asserted once, above, under an
   # emulator. Booting the same image from three systems would be a statement
   # about the emulator rather than about this package, and "the image does what
   # the README says" does not become more true for having been observed from
@@ -188,7 +188,7 @@ jobs:
 
       - name: Install mcpp
         run: |
-          # ⚠️ A LOOP, BECAUSE ONE `xlings update` CAN RETURN A STALE INDEX
+          # A LOOP, BECAUSE ONE `xlings update` CAN RETURN A STALE INDEX
           # WITHOUT SAYING SO.
           #
           # The index is published as an artifact behind a pointer, and that
@@ -222,7 +222,7 @@ jobs:
 
       - name: The allocator cross-builds
         run: |
-          # ⚠️ TWICE, AND THE FIRST IS ALLOWED TO FAIL — every row of this
+          # TWICE, AND THE FIRST IS ALLOWED TO FAIL — every row of this
           # matrix is a machine that has never targeted this triple, which is
           # precisely where mcpp's lazy install of the target C library shows.
           # The first build compiles sources needing its headers before they
