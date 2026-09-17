@@ -20,7 +20,7 @@
 // the standard specifies, written in the form a replacement implementation is
 // expected to use.
 //
-// ⚠️ TWELVE, AND THE LAST FOUR ARE THE ONES THAT GET FORGOTTEN.
+// TWELVE, AND THE LAST FOUR ARE THE ONES THAT GET FORGOTTEN.
 //
 // Measured on riscv64-none-elf: defining the eight sized and unsized forms
 // leaves the link failing on `operator delete(void*, unsigned long,
@@ -47,7 +47,7 @@ void  kal_free(void* p, size_type size, size_type align);
 namespace {
 // The alignment an unaligned allocation must satisfy.
 //
-// ⚠️ `__BIGGEST_ALIGNMENT__` and not `alignof(std::max_align_t)`: the latter
+// `__BIGGEST_ALIGNMENT__` and not `alignof(std::max_align_t)`: the latter
 // lives in <cstddef>, which would mean depending on the subset package and
 // closing a cycle. The macro is predefined by both GCC and Clang and is the
 // same quantity. Measured: `alignof(__max_align_t)` does not compile here at
@@ -55,7 +55,7 @@ namespace {
 // library include path does not have.
 constexpr size_type kDefaultAlign = __BIGGEST_ALIGNMENT__;
 
-// ⚠️ Size and alignment are forwarded to `kal_free` because openkal's contract
+// Size and alignment are forwarded to `kal_free` because openkal's contract
 // requires them: an implementation may be a bump allocator, a slab, or a
 // wrapper over the C library's, and only the first of those can ignore them.
 // The unsized `operator delete` overloads have no size to pass and give zero,
